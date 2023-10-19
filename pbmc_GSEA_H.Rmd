@@ -1,0 +1,90 @@
+---
+title: "ssgs"
+author: "Mila"
+date: "2023-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+library(escape)
+```
+```{r}
+library(Seurat)
+```
+```{r}
+library(ggplot2)
+```
+```{r}
+colorblind_vector <- colorRampPalette(rev(c("#0D0887FF", "#47039FFF", 
+              "#7301A8FF", "#9C179EFF", "#BD3786FF", "#D8576BFF",
+              "#ED7953FF","#FA9E3BFF", "#FDC926FF", "#F0F921FF")))
+```
+```{r}
+seurat_ex <- readRDS("C://Users/milal/Documents/SC/pbmc3k_final1.rds")
+```
+```{r}
+seurat_ex <- UpdateSeuratObject(seurat_ex)
+```
+```{r}
+DimPlot(seurat_ex, label = T) + NoLegend()
+```
+```{r}
+gene.sets <- getGeneSets(library = "H")
+```
+```{r}
+ES <- enrichIt(obj = seurat_ex, 
+               gene.sets = gene.sets, 
+               groups = 1000, cores = 4, 
+               min.size = NULL)
+```
+```{r}
+seurat_ex <- AddMetaData(seurat_ex, ES)
+```
+```{r}
+seurat_ex@meta.data$active.idents <- seurat_ex@active.ident
+```
+```{r}
+dittoHeatmap(seurat_ex, genes = NULL, metas = names(ES),
+             heatmap.colors = rev(colorblind_vector(50)),
+             annot.by = c("active.idents"),
+             cluster_cols = TRUE,
+             fontsize = 7)
+```
+```{r}
+ES2 <- data.frame(seurat_ex[[]], Idents(seurat_ex))
+
+```
+```{r}
+colnames(ES2)[ncol(ES2)] <- "cluster"
+
+```
+```{r}
+ridgeEnrichment(ES2, gene.set = "HALLMARK_P53_PATHWAY", group = "active.idents", add.rug = TRUE)
+```
+```{r}
+saveRDS(seurat_ex, file = "C://Users/milal/Documents/SC/pbmcs_GSEA_H.rds")
+```
+
